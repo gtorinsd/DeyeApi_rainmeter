@@ -1,0 +1,7 @@
+Station_id: 2508271645
+Updated at: 28-12-25 13:01:31
+TotalGridPower: 281 W
+BatteryVoltage: 53.10 V
+DC Temperature: 41.80 °C
+AC Temperature: 35.50 °C
+Source: Grid
