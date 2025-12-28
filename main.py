@@ -3,6 +3,7 @@ import hashlib
 from handlers.ApiClient import ApiClient
 from worker import Worker
 from app_init import conf
+from logging.handlers import RotatingFileHandler
 
 # noinspection PyArgumentList
 def init_log():
@@ -11,7 +12,8 @@ def init_log():
         level=log_level,
         format='%(asctime)s | %(name)-15s | %(funcName)-40s | %(levelname)-7s | %(message)s',
         handlers=[
-            logging.FileHandler(filename='app.log', mode='w+'),
+            # logging.FileHandler(filename='app.log', mode='a'),
+            RotatingFileHandler('app.log', maxBytes=100000, backupCount=10)
             # logging.StreamHandler(),
         ],
     )
@@ -36,8 +38,7 @@ if __name__ == '__main__':
                                 email=conf['EMAIL'],
                                 passw=_encrypt_str(conf['PASSW']),
                                 app_id=conf['APPID'],
-                                app_secret=conf['APPSECRET'],
-                                bearer_token=conf['BEARER_TOKEN']
+                                app_secret=conf['APPSECRET']
                             )
             ).work()
         for item in res:
@@ -47,5 +48,7 @@ if __name__ == '__main__':
                 mess = f'{item}: {res[item]}'
             logging.debug(mess)
             print(mess)
+    except Exception as ex:
+        logging.error(ex)
     finally:
         logging.info(f'Done')

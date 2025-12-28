@@ -10,7 +10,6 @@ conf = Configs(
         'PASSW': None,
         'APPID': None,
         'APPSECRET': None,
-        'BEARER_TOKEN': None,
     },
 
     config_file_path='config_local.ini'

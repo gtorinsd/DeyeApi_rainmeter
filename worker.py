@@ -19,7 +19,6 @@ class Worker:
             r = self.api_client.get_device_info(station=station)
             device_info = r['deviceDataList'][0]['dataList']
 
-
             result = {
                 'Station_id': station,
                 'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%#d-%#m-%#y %#H:%M:%S')

@@ -53,16 +53,17 @@ class ApiClient:
             'password': self.userPwd,
             'appSecret': self.app_secret
         }
-        self.logger.debug(f'Login to Deye api portal')
+        self.logger.info(f'Login to Deye api portal')
         r = requests.post(self.baseUrL + '/account/token', json=credentials, params={'appId': self.appId})
         if r.status_code == 200:
-            self.logger.debug(f'OK')
+            self.logger.info(f'OK')
             self.bearer_token = r.json()['accessToken']
             return True
-        self.logger.debug(f'{r.status_code}, {r.json()}')
+        self.logger.warning(f'{r.status_code}, {r.json()}')
         return False
 
     def get_device_info(self, station):
+        self.logger.info(f'Get device info for station {station}')
         headers = {
             'Authorization': f'Bearer {self.bearer_token}',
             'Content-Type': 'application/json'  # Often needed, but check API documentation
@@ -74,6 +75,8 @@ class ApiClient:
 
         r = requests.post(self.baseUrL + '/device/latest', headers=headers, json=params)
         if r.status_code == 200:
+            self.logger.info(f'OK')
             return r.json()
+        self.logger.warning(f'{r.status_code}, {r.json()}')
         return None
 
