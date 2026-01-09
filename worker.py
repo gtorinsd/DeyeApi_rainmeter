@@ -21,7 +21,8 @@ class Worker:
 
             result = {
                 'Station_id': station,
-                'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%#d-%#m-%#y %#H:%M:%S')
+                # 'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%#d-%#m-%#y %#H:%M:%S')
+                'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%d.%m.%Y %H:%M:%S')
             }
             params = ['TotalGridPower', 'BatteryVoltage', 'DC Temperature', 'AC Temperature', 'Temperature- Battery']
             # params = ['TotalGridPower', 'BatteryVoltage']
