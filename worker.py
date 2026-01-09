@@ -14,7 +14,6 @@ class Worker:
         dict_values = {x['key']: x for x in data_list if x['key'] in param_names}
         return {x: {'value': dict_values[x]['value'], 'value_str': f"{dict_values[x]['value'].replace('℃', '°C')} {dict_values[x]['unit'].replace('℃', '°C')}"} for x in param_names}
 
-
     def work(self, station='2508271645') -> Optional[Dict]:
         if self.api_client.auth():
             r = self.api_client.get_device_info(station=station)
