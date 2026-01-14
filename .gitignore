@@ -3,3 +3,4 @@
 *.pyc
 config_local.ini
 *.log
+/token.json
