@@ -30,15 +30,15 @@ def _encrypt_str(input_str: str) -> str:
 
 if __name__ == '__main__':
     init_log()
-    logging.info(f'App v 1.01')
+    logging.info(f'App v 1.02')
 
     try:
         res = Worker(api=ApiClient(
                                 base_url=conf['BASE_URL'],
                                 email=conf['EMAIL'],
                                 passw=_encrypt_str(conf['PASSW']),
-                                app_id=conf['APPID'],
-                                app_secret=conf['APPSECRET']
+                                app_id=conf['APP_ID'],
+                                app_secret=conf['APP_SECRET']
                             )
             ).work()
         for item in res:

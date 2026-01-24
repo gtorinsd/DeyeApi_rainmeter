@@ -19,20 +19,21 @@ class Worker:
         if self.api_client.auth():
             r = self.api_client.get_device_info(station=station)
             device_info = r['deviceDataList'][0]['dataList']
+            updated_at = datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%d.%m.%Y %H:%M:%S')
+            self.logger.info(f'Updated at: {updated_at}')
 
             result = {
                 'Station_id': station,
                 # 'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%#d-%#m-%#y %#H:%M:%S')
-                'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%d.%m.%Y %H:%M:%S')
+                'Updated at': updated_at
             }
             params = ['TotalGridPower', 'SOC', 'DC Temperature', 'AC Temperature', 'Temperature- Battery']
             # params = ['TotalGridPower', 'BatteryVoltage']
             result.update(self._get_device_data_list_param(data_list=device_info, param_names=params))
 
-            if int(result['TotalGridPower']['value']) == 0:
-                result['Source'] = 'BATTERY'
-            else:
-                result['Source'] = 'Grid'
+            power_source = 'BATTERY' if int(result['TotalGridPower']['value']) == 0 else 'Grid'
+            self.logger.info(f'Power source: {power_source}')
+            result['Source'] = power_source
 
             return result
         return None

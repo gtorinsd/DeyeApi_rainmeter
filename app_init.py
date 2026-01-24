@@ -8,8 +8,8 @@ conf = Configs(
         'BASE_URL': None,
         'EMAIL': None,
         'PASSW': None,
-        'APPID': None,
-        'APPSECRET': None,
+        'APP_ID': None,
+        'APP_SECRET': None,
     },
 
     config_file_path='config_local.ini'
