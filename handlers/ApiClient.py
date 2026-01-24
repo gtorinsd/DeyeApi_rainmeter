@@ -11,9 +11,9 @@ class ApiClient:
     def __init__(self, base_url, email, passw, app_secret, app_id, bearer_token = None):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.userLogin = email
-        self.userPwd = passw
-        self.baseUrL = base_url
+        self.user_login = email
+        self.user_passw = passw
+        self.base_url = base_url
         self.app_secret = app_secret
         self.appId = app_id
         self.bearer_token = bearer_token
@@ -36,7 +36,7 @@ class ApiClient:
             return r.status_code, data
 
     def _request(self, method: str, path, params=None, data=None):
-        url = self.baseUrL + path if path[0] == '/' else f'{self.baseUrL}/{path}'
+        url = self.base_url + path if path[0] == '/' else f'{self.base_url}/{path}'
 
         method = method.lower()
         r = None
@@ -59,7 +59,7 @@ class ApiClient:
                     # Use json.load() to parse the file contents
                     json_auth = json.load(file)
                 self.logger.info(f'Get token from file')
-                self.bearer_token = json_auth[self.userLogin]
+                self.bearer_token = json_auth[self.user_login]
                 return True
             except FileNotFoundError as ex:
                 self.logger.warning(f'File not found: {self.TOKEN_FILE_PATH}')
@@ -67,18 +67,18 @@ class ApiClient:
                 self.logger.warning(ex)
 
         credentials = {
-            'email': self.userLogin,
-            'password': self.userPwd,
+            'email': self.user_login,
+            'password': self.user_passw,
             'appSecret': self.app_secret
         }
         self.logger.info(f'Login to Deye api portal')
-        r = requests.post(self.baseUrL + '/account/token', json=credentials, params={'appId': self.appId})
+        r = requests.post(self.base_url + '/account/token', json=credentials, params={'appId': self.appId})
         if r.status_code == 200:
             # Save token to file
             self.logger.info(f'OK')
             self.bearer_token = r.json()['accessToken']
 
-            json_auth[self.userLogin] = self.bearer_token
+            json_auth[self.user_login] = self.bearer_token
             with open(self.TOKEN_FILE_PATH, 'w') as f:
                 json.dump(json_auth, f)
             return True
@@ -97,7 +97,7 @@ class ApiClient:
                     "deviceList": [station]
         }
 
-        r = requests.post(self.baseUrL + '/device/latest', headers=headers, json=params)
+        r = requests.post(self.base_url + '/device/latest', headers=headers, json=params)
         if r.status_code == 200:
             res = r.json()
             if not res['success']:
