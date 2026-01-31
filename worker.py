@@ -28,7 +28,7 @@ class Worker:
                 # 'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%#d-%#m-%#y %#H:%M:%S')
                 'Updated at': updated_at
             }
-            params = ['TotalGridPower', 'SOC', 'DC Temperature', 'AC Temperature', 'Temperature- Battery']
+            params = ['TotalGridPower', 'SOC', 'DC Temperature', 'AC Temperature', 'Temperature- Battery', 'InverterOutputPowerL1L2']
             # params = ['TotalGridPower', 'BatteryVoltage']
             result.update(self._get_device_data_list_param(data_list=device_info, param_names=params))
 
