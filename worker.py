@@ -29,11 +29,17 @@ class Worker:
                 'Updated at': updated_at
             }
             params = ['TotalGridPower', 'SOC', 'DC Temperature', 'AC Temperature', 'Temperature- Battery', 'InverterOutputPowerL1L2']
-            # params = ['TotalGridPower', 'BatteryVoltage']
             result.update(self._get_device_data_list_param(data_list=device_info, param_names=params))
 
-            power_source = 'BATTERY' if int(result['TotalGridPower']['value']) == 0 else 'Grid'
+            if int(result['TotalGridPower']['value']) == 0:
+                power_source = 'BATTERY'
+            else:
+                power_source = 'Grid'
+                result['InverterOutputPowerL1L2']['value'] = 0
+                result['InverterOutputPowerL1L2']['value_str'] = '0 W'
+
             self.logger.info(f'Power source: {power_source}')
+
             result['Source'] = power_source
 
             return result
