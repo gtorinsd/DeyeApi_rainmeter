@@ -18,6 +18,7 @@ class Worker:
     def work(self, station='2508271645') -> Optional[Dict]:
         if self.api_client.auth():
             r = self.api_client.get_device_info(station=station)
+
             device_info = r['deviceDataList'][0]['dataList']
             updated_at = datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%d.%m.%Y %H:%M:%S')
             self.logger.info(f'Updated at: {updated_at}')

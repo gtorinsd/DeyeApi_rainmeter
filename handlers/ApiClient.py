@@ -86,7 +86,7 @@ class ApiClient:
         self.logger.warning(f'{r.status_code}, {r.json()}')
         return False
 
-    def get_device_info(self, station):
+    def _get_device_info(self, station):
         self.logger.info(f'Get device info for station {station}')
         headers = {
             'Authorization': f'Bearer {self.bearer_token}',
@@ -96,16 +96,24 @@ class ApiClient:
         params = {
                     "deviceList": [station]
         }
-
         r = requests.post(self.base_url + '/device/latest', headers=headers, json=params)
+        self.logger.info(f'{r.status_code}')
+        return r
+
+    def get_device_info(self, station):
+        r = self._get_device_info(station=station)
+        if r.status_code == 500:
+            self.logger.info(f'One more try')
+            sleep(5)
+            r = self._get_device_info(station=station)
         if r.status_code == 200:
             res = r.json()
-            if not res['success']:
+            if not res['success'] and res['msg'] == 'auth invalid token':
                 self.logger.warning(res['msg'])
                 # Get new token
                 sleep(5)
                 self.auth(login=True)
-                return self.get_device_info(station=station)
+                return self._get_device_info(station=station)
             self.logger.info(f'OK')
             return res
         self.logger.warning(f'{r.status_code}, {r.json()}')

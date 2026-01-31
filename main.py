@@ -30,7 +30,7 @@ def _encrypt_str(input_str: str) -> str:
 
 if __name__ == '__main__':
     init_log()
-    logging.info(f'App v 1.02')
+    logging.info(f'App v 1.03')
 
     try:
         res = Worker(api=ApiClient(
