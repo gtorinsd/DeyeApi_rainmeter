@@ -1,0 +1,9 @@
+Station_id: 2508271645
+Updated at: 05.06.2026 16:28:48
+TotalGridPower: 1565 W
+SOC: 100 %
+DC Temperature: 44.80 °C
+AC Temperature: 38.30 °C
+Temperature- Battery: 22.30 °C
+InverterOutputPowerL1L2: 0 W
+Source: Grid
