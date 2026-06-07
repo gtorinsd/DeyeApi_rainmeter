@@ -42,6 +42,7 @@ There is no test suite, linter, or build step.
 ## Things to know before editing
 
 - **Output contract is positional.** `main.py` iterates a Python dict; insertion order in `Worker.work`'s `result` dict drives the line order in stdout, which drives the regex group indices in `DeyeStatus2.ini`. Reorder with care.
+- **`DeyeStatus2.ini` is UTF-16 LE with BOM (`FF FE`).** Read/write byte-aware — naïve text edits as UTF-8 will corrupt it. In PowerShell use `[System.IO.File]::ReadAllText($p, [System.Text.Encoding]::Unicode)` and `WriteAllText` with the same encoding to preserve the BOM.
 - **Hardcoded paths in the skin.** `app_path` and `DataFile` are absolute paths in `DeyeStatus2.ini` (`D:\projects\python\DeyeApi_rainmeter`, `T:\deye_status.txt`). The skin also assumes `.venv\Scripts\python.exe` exists at that path.
 - **Token cache invalidation is implicit.** Deleting `token.json` forces re-login on the next run; this is the recovery path when auth state goes weird.
 - **`old/` and `demo/`** are reference material, not active code. `app.log.*` are rotated log files.
