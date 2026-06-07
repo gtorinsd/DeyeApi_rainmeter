@@ -6,9 +6,7 @@ import requests
 
 
 class ApiClient:
-    cookies = None
-
-    def __init__(self, base_url, email, passw, app_secret, app_id, bearer_token = None):
+    def __init__(self, base_url, email, passw, app_secret, app_id, bearer_token=None):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.user_login = email
@@ -19,49 +17,24 @@ class ApiClient:
         self.bearer_token = bearer_token
         self.TOKEN_FILE_PATH = 'token.json'
 
-        self.headers = {
-            'User-Agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36" # Chrome
-        }
-
-
     @staticmethod
-    def _get_result(r):
-        data = None
-        if r.status_code in [200, 201]:
-            data = r.json()
-            return r.status_code, data['response']
-        elif r.status_code == 404:
-            return r.status_code, r.json()
-        else:
-            return r.status_code, data
+    def _safe_body(r):
+        try:
+            return r.json()
+        except ValueError:
+            return r.text[:200]
 
-    def _request(self, method: str, path, params=None, data=None):
-        url = self.base_url + path if path[0] == '/' else f'{self.base_url}/{path}'
-
-        method = method.lower()
-        r = None
-        if method == 'get':
-            r = requests.get(url, params=params, data=data, cookies=self.__class__.cookies)
-        elif method == 'put':
-            r = requests.put(url, data=data, cookies=self.__class__.cookies)
-        elif method == 'post':
-            r = requests.post(url, data=data, cookies=self.__class__.cookies)
-        elif method == 'delete':
-            r = requests.delete(url, data=data, cookies=self.__class__.cookies)
-        return self._get_result(r)
-
-    def auth(self, login:bool=False) -> bool:
+    def auth(self, login: bool = False) -> bool:
         json_auth = {}
         if not login:
             # Read token from file
             try:
                 with open(self.TOKEN_FILE_PATH, 'r') as file:
-                    # Use json.load() to parse the file contents
                     json_auth = json.load(file)
-                self.logger.info(f'Get token from file')
+                self.logger.info('Get token from file')
                 self.bearer_token = json_auth[self.user_login]
                 return True
-            except FileNotFoundError as ex:
+            except FileNotFoundError:
                 self.logger.warning(f'File not found: {self.TOKEN_FILE_PATH}')
             except Exception as ex:
                 self.logger.warning(ex)
@@ -71,11 +44,16 @@ class ApiClient:
             'password': self.user_passw,
             'appSecret': self.app_secret
         }
-        self.logger.info(f'Login to Deye api portal')
-        r = requests.post(self.base_url + '/account/token', json=credentials, params={'appId': self.appId})
+        self.logger.info('Login to Deye api portal')
+        r = requests.post(
+            self.base_url + '/account/token',
+            json=credentials,
+            params={'appId': self.appId},
+            timeout=10,
+        )
         if r.status_code == 200:
             # Save token to file
-            self.logger.info(f'OK')
+            self.logger.info('OK')
             self.bearer_token = r.json()['accessToken']
 
             json_auth[self.user_login] = self.bearer_token
@@ -83,7 +61,7 @@ class ApiClient:
                 json.dump(json_auth, f)
             return True
 
-        self.logger.warning(f'{r.status_code}, {r.json()}')
+        self.logger.warning(f'{r.status_code}, {self._safe_body(r)}')
         return False
 
     def _get_device_info(self, station):
@@ -96,14 +74,14 @@ class ApiClient:
         params = {
                     "deviceList": [station]
         }
-        r = requests.post(self.base_url + '/device/latest', headers=headers, json=params)
+        r = requests.post(self.base_url + '/device/latest', headers=headers, json=params, timeout=10)
         self.logger.info(f'{r.status_code}')
         return r
 
     def get_device_info(self, station):
         r = self._get_device_info(station=station)
         if r.status_code == 500:
-            self.logger.info(f'One more try')
+            self.logger.info('One more try')
             sleep(5)
             r = self._get_device_info(station=station)
         if r.status_code == 200:
@@ -113,9 +91,12 @@ class ApiClient:
                 # Get new token
                 sleep(5)
                 self.auth(login=True)
-                return self._get_device_info(station=station)
-            self.logger.info(f'OK')
+                r = self._get_device_info(station=station)
+                if r.status_code == 200:
+                    return r.json()
+                self.logger.warning(f'{r.status_code}, {self._safe_body(r)}')
+                return None
+            self.logger.info('OK')
             return res
-        self.logger.warning(f'{r.status_code}, {r.json()}')
+        self.logger.warning(f'{r.status_code}, {self._safe_body(r)}')
         return None
-
