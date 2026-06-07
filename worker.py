@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from handlers.ApiClient import ApiClient
 
 
@@ -23,13 +23,12 @@ class Worker:
             updated_at = datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%d.%m.%Y %H:%M:%S')
             self.logger.info(f'Updated at: {updated_at}')
 
-            result = {
-                'Station_id': station,
-                # 'Updated at': datetime.datetime.strftime(datetime.datetime.fromtimestamp(r['deviceDataList'][0]['collectionTime']), '%#d-%#m-%#y %#H:%M:%S')
-                'Updated at': updated_at
-            }
             params = ['TotalGridPower', 'SOC', 'DC Temperature', 'AC Temperature', 'Temperature- Battery', 'InverterOutputPowerL1L2']
-            result.update(self._get_device_data_list_param(data_list=device_info, param_names=params))
+            result: Dict[str, Any] = {
+                'Station_id': station,
+                'Updated at': updated_at,
+                **self._get_device_data_list_param(data_list=device_info, param_names=params),
+            }
 
             if int(result['TotalGridPower']['value']) == 0:
                 power_source = 'BATTERY'
