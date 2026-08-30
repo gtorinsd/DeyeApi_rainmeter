@@ -14,9 +14,11 @@ The Python side is not a long-running service. It is a one-shot CLI that authent
 # Run a single fetch (uses .venv pinned by Rainmeter and #launch.bat)
 .venv\Scripts\python.exe main.py
 
-# How Rainmeter invokes it (see rainmeter_plugin/DeyeStatus2.ini, MeasureRunPython)
+# How Rainmeter invokes it (see rainmeter_plugin/DeyeStatusEng.ini, MeasureRunPython)
 #   <app_path>\.venv\Scripts\python.exe <app_path>\main.py
-# stdout is redirected to #DataFile# (currently T:\deye_status.txt)
+# stdout is redirected to #DataFile# (currently t:/deye_status.txt)
+
+# #launch.bat does the same by hand, writing to ./out.txt instead
 ```
 
 There is no test suite, linter, or build step.
@@ -33,17 +35,20 @@ There is no test suite, linter, or build step.
 
 **`app_init.py` + `handlers/Configs.py`** load `config_local.ini` against a default-config dict; only keys present in the defaults are read, and boolean defaults trigger `getboolean` parsing.
 
-**`rainmeter_plugin/DeyeStatus2.ini`** is the Rainmeter skin:
+**`rainmeter_plugin/DeyeStatusEng.ini`** is the Rainmeter skin (English labels; it is the only skin file — the Russian `DeyeStatus2.ini` was retired, see `git log`):
 - `MeasureRunInterval` fires `MeasureRunPython` every 180 update ticks (~6 min at Update=2000ms).
 - `MeasureRunPython` (RunCommand plugin) runs `main.py`, captures stdout to `#DataFile#`, then triggers `MeasureFile`.
-- `MeasureFile` is a `WebParser` reading the file with a single multi-group regex — **the order and exact key names in `main.py`'s output must match the regex in `DeyeStatus2.ini` line-for-line**. Changing the param list in `Worker.work` requires updating both the regex and the per-field `MeasureXxx` `StringIndex` numbers.
-- `MeasureSource` flips the power-source indicator image and refresh-button color based on whether the `Source` field matches `BATTERY`.
+- `MeasureFile` is a `WebParser` reading the file with a single multi-group regex — **the order and exact key names in `main.py`'s output must match the regex in `DeyeStatusEng.ini` line-for-line**. Changing the param list in `Worker.work` requires updating both the regex and the per-field `MeasureXxx` `StringIndex` numbers.
+- `MeasureSource` flips the power-source indicator image (`@Resources/bullet_red.png` / `bullet_green.png`) and the `refreshButtonColor` variable based on whether the `Source` field matches `BATTERY`. It is deliberately written as `IfMatch=(?i)BATTERY` + `IfNotMatchAction=<green>`, so anything else — including an empty value mid-update — falls back to green rather than flashing red.
+- **Encoding round-trip:** `MeasureRunPython` captures stdout as `OutputType=ANSI` and `MeasureFile` reads it back with `CodePage=1251`. That pairing is what makes `°C` survive; changing one without the other garbles the temperature units (`rainmeter_plugin/out.txt` is such a capture, and looks mojibake'd when viewed as UTF-8).
+- **`Timeout=5000` on `MeasureRunPython`** while `ApiClient` uses `timeout=10` per request and sleeps 5s between retries — a slow or retrying API call can outlive Rainmeter's patience and yield a truncated/empty `#DataFile#`.
 
 ## Things to know before editing
 
-- **Output contract is positional.** `main.py` iterates a Python dict; insertion order in `Worker.work`'s `result` dict drives the line order in stdout, which drives the regex group indices in `DeyeStatus2.ini`. Reorder with care.
-- **`DeyeStatus2.ini` is UTF-16 LE with BOM (`FF FE`).** Read/write byte-aware — naïve text edits as UTF-8 will corrupt it. In PowerShell use `[System.IO.File]::ReadAllText($p, [System.Text.Encoding]::Unicode)` and `WriteAllText` with the same encoding to preserve the BOM.
-- **Hardcoded paths in the skin.** `app_path` and `DataFile` are absolute paths in `DeyeStatus2.ini` (`D:\projects\python\DeyeApi_rainmeter`, `T:\deye_status.txt`). The skin also assumes `.venv\Scripts\python.exe` exists at that path.
+- **Output contract is positional.** `main.py` iterates a Python dict; insertion order in `Worker.work`'s `result` dict drives the line order in stdout, which drives the regex group indices in `DeyeStatusEng.ini`. Reorder with care.
+- **`DeyeStatusEng.ini` is UTF-16 LE with BOM (`FF FE`).** Read/write byte-aware — naïve text edits as UTF-8 will corrupt it. In PowerShell use `[System.IO.File]::ReadAllText($p, [System.Text.Encoding]::Unicode)` and `WriteAllText` with the same encoding to preserve the BOM.
+- **Hardcoded paths in the skin.** `app_path` and `DataFile` are absolute paths in `DeyeStatusEng.ini` (`D:\projects\python\DeyeApi_rainmeter`, `T:\deye_status.txt`). The skin also assumes `.venv\Scripts\python.exe` exists at that path.
 - **Token cache invalidation is implicit.** Deleting `token.json` forces re-login on the next run; this is the recovery path when auth state goes weird.
-- **`old/` and `demo/`** are reference material, not active code. `app.log.*` are rotated log files.
+- **`demo/`** (screenshot + sample output) and `rainmeter_plugin/out.txt` are reference material, not active code. `app.log.*` are rotated log files. The `old/` directory referenced in earlier commits no longer exists.
 - **No retries beyond the two specific cases** in `ApiClient.get_device_info` (HTTP 500 once, invalid-token once). Network failures bubble up to `main.py`'s top-level `except` and are logged but produce no stdout — which means Rainmeter sees stale data from the previous successful run.
+- **`README.md` is the user-facing counterpart to this file** and documents the same output contract, setup steps and gotchas. Changes to the field list, the skin filename, or the project layout need to land in both.

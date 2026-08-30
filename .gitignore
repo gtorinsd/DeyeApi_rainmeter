@@ -2,5 +2,5 @@
 .idea
 *.pyc
 config_local.ini
-*.log
+*app.log*
 /token.json
